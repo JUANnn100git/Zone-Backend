@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import banking.users.application.dto.UserDto;
+import banking.users.application.dto.UsersAllDto;
 import banking.common.application.Notification;
 import banking.common.application.enumeration.RequestBodyType;
 import banking.common.infrastructure.security.Hashing;
@@ -50,6 +51,7 @@ public class UserApplicationService {
 		userDto = mapper.map(user, UserDto.class);
         return userDto;
     }
+	
 	
 	private Notification createValidation(UserDto userDto) {
 		Notification notification = new Notification();
@@ -118,4 +120,79 @@ public class UserApplicationService {
 		}
 		return notification;
 	}
+    
+    // Implementando Funciones para el EndPoint de UserClaim para los permisos
+    
+	public UserClaimDto createClaim(long userId, UserClaimDto userClaimDto) {
+		Notification notification = this.createValidationClaim(userClaimDto);
+        if (notification.hasErrors()) {
+            throw new IllegalArgumentException(notification.errorMessage());
+        }
+		User user = this.userRepository.getById(userId);
+		user = mapper.map(user, User.class);
+        UserClaim userClaim = mapper.map(userClaimDto, UserClaim.class);
+        userClaim.setUser(user);
+        userClaim = userClaimRepository.save(userClaim);
+        userClaimDto = mapper.map(userClaim, UserClaimDto.class);
+        return userClaimDto;
+    }
+	
+	private Notification createValidationClaim(UserClaimDto userClaimDto) {
+		Notification notification = new Notification();
+		if (userClaimDto == null ) {
+			notification.addError("Invalid JSON data in request body.");
+		}
+		return notification;
+	}
+	
+	public UserClaimDto getById(long userClaimId) {
+		ModelMapper modelMapper = new ModelMapper();
+		UserClaim userClaim = this.userClaimRepository.getById(userClaimId);
+		
+		System.out.println("############## UserClaim ##########  ");
+		System.out.println("id: " + userClaim.getId());
+		System.out.println("type: " + userClaim.getType());
+		System.out.println("value: " + userClaim.getValue());
+		System.out.println("user: " + userClaim.getUser());
+		
+		User user = userClaim.getUser();
+		user.setClaims(null);
+		UserDto userDto = modelMapper.map(user, UserDto.class);
+
+
+		UserClaimDto userClaimDto = modelMapper.map(userClaim, UserClaimDto.class);
+		userClaimDto.setUserDto(userDto);
+        return userClaimDto;
+    }
+	
+	public void deleteClaimById(long userClaimId) {
+		ModelMapper modelMapper = new ModelMapper();
+		UserClaimDto userClaimDto  = this.getById(userClaimId);
+		UserClaim userClaim = modelMapper.map(userClaimDto, UserClaim.class);
+		this.userClaimRepository.delete(userClaim);
+    }
+	
+	
+    public UsersAllDto getUsersPaginated(int page, int pageSize) {
+    	
+		Notification notification = this.getPaginatedValidation(page, pageSize);
+        if (notification.hasErrors()) {
+            throw new IllegalArgumentException(notification.errorMessage());
+        }
+        
+		ModelMapper modelMapper = new ModelMapper();
+		UsersAllDto usersAllDto = new UsersAllDto();
+		
+		List<User> users = this.userRepository.getPaginated(page, pageSize);
+		List<UserDto> usersDto = mapper.map(users, new TypeToken<List<UserDto>>() {}.getType());
+		
+		long countUsers = this.userRepository.count();
+		
+		usersAllDto.setUsers(usersDto);
+		usersAllDto.setTotal(countUsers);
+
+        return usersAllDto;
+    }
+    
+	
 }

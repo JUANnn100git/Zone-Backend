@@ -40,4 +40,11 @@ public class BaseHibernateRepository<T> implements BaseRepository<T> {
 		getSession().saveOrUpdate(entity);
 		return entity;
 	}
+
+	public void delete(T entity) {
+		getSession().delete(entity);
+	}
+
+
+
 }

@@ -3,6 +3,7 @@ package banking.users.infrastructure.hibernate.repository;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.springframework.stereotype.Repository;
@@ -47,4 +48,13 @@ public class UserHibernateRepository extends BaseHibernateRepository<User> imple
 	public User save(User user) {
 		return super.save(user);
 	}
+	
+	public Long count() {
+		Criteria criteria = getSession().createCriteria(User.class, "u");
+		criteria.setProjection(Projections.rowCount());
+		Long count = (Long) criteria.uniqueResult();
+		return count;
+	}
+
+
 }

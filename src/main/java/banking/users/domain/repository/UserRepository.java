@@ -9,4 +9,5 @@ public interface UserRepository {
 	public User getById(long userId);
 	public User getByName(String name);
 	public List<User> getPaginated(int page, int pageSize);
+	public Long count(); 
 }

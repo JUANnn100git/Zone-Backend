@@ -1,5 +1,6 @@
 package banking.users.application.dto;
 
+
 public class UserClaimDto {
 	private long id;
     private String type;
